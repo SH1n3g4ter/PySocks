@@ -284,7 +284,12 @@ class socksocket(_BaseSocket):
         try:
             # test if we're connected, if so apply timeout
             peer = self.get_proxy_peername()
-            super(socksocket, self).settimeout(self._timeout)
+            #trying to fix recursion error by doing what greenio does manually instead as the super method causes the recursion
+            #super(socksocket, self).settimeout(self._timeout)
+            if self._timeout == 0.0:
+                self.act_non_blocking = True
+            else:
+                self.act_non_blocking = False
         except socket.error:
             pass
 
@@ -292,6 +297,8 @@ class socksocket(_BaseSocket):
         return self._timeout
 
     def setblocking(self, v):
+        if self._timeout == v:
+            return
         if v:
             self.settimeout(None)
         else:
